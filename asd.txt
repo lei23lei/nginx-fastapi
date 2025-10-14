@@ -1,0 +1,32 @@
+upstream myserverlist{
+     server 127.0.0.1:81 weight=6 down;
+     server 127.0.0.1:82 weight=3 down;
+     server 127.0.0.1:83 weight=1 backup;
+}
+server {
+    listen 80;
+    server_name peter.com;
+    location / {
+        proxy_pass http://myserverlist;
+    }
+}
+server {
+    listen 81;
+    server_name _;
+    root /www/num1;
+    index index.html;
+}
+server {
+    listen 82;
+    server_name _;
+    root /www/num2;
+    index index.html;
+}
+server {
+    listen 83;
+    server_name _;
+    root /www/num3;
+    index index.html;
+}
+
+
