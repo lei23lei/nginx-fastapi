@@ -1,9 +1,14 @@
 from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 templates = Jinja2Templates(directory="templates")
+
+# Mount static files
+app.mount("/static/css", StaticFiles(directory="css"), name="css")
+app.mount("/static/images", StaticFiles(directory="images"), name="images")
 
 
 @app.get("/", response_class=HTMLResponse)
