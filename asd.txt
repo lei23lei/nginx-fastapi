@@ -1,38 +1,17 @@
-upstream myserverlist{
-     server 127.0.0.1:81 weight=6 down;
-     server 127.0.0.1:82 weight=3 down;
-     server 127.0.0.1:83 weight=1 backup;
+upstream backend_pool {
+    server 127.0.0.1:8000 weight=5 down;
+    server 127.0.0.1:8001 weight=5;
 }
+
 server {
     listen 80;
     server_name peter.com;
-    location / {
-        proxy_pass http://myserverlist;
-    }
-}
-server {
-    listen 81;
-    server_name _;
-    root /www/num1;
-    index index.html;
-}
-server {
-    listen 82;
-    server_name _;
-    root /www/num2;
-    index index.html;
-}
-server {
-    listen 83;
-    server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8000;
+        proxy_pass http://backend_pool;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 }
-
-

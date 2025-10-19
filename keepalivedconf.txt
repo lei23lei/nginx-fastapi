@@ -1,0 +1,39 @@
+global_defs {
+    router_id vm1_nginx
+}
+
+vrrp_instance iampeter {
+    state MASTER
+    interface enp0s8
+    virtual_router_id 51
+    priority 100
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        10.0.2.100
+    }
+}
+
+## VM2
+
+global_defs {
+    router_id vm2
+}
+
+vrrp_instance VI_1 {
+    state BACKUP                 # VM2 is backup
+    interface enp0s8
+    virtual_router_id 51
+    priority 90                  # Lower than VM1 (MASTER=100)
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass 1111
+    }
+    virtual_ipaddress {
+        10.0.2.100               # Same VIP as VM1
+    }
+}
