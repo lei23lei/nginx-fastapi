@@ -65,6 +65,16 @@ async def get_remote_info(request: Request):
     }
 
 
+@app.get("/x-forwarded-for")
+async def get_x_forwarded_for(request: Request):
+    """Get X-Forwarded-For header"""
+    x_forwarded_for = request.headers.get("x-forwarded-for")
+    return {
+        "x_forwarded_for": x_forwarded_for,
+        "exists": x_forwarded_for is not None
+    }
+
+
 
 if __name__ == "__main__":
     import uvicorn
