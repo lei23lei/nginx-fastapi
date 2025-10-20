@@ -1,36 +1,105 @@
-upstream myserverlist{
-     server 127.0.0.1:81 weight=6 down;
-     server 127.0.0.1:82 weight=3 down;
-     server 127.0.0.1:83 weight=1 backup;
-}
-server {
-    listen 80;
-    server_name peter.com;
-    location / {
-        proxy_pass http://myserverlist;
-    }
-}
-server {
-    listen 81;
-    server_name _;
-    root /www/num1;
-    index index.html;
-}
-server {
-    listen 82;
-    server_name _;
-    root /www/num2;
-    index index.html;
-}
-server {
-    listen 83;
-    server_name _;
+user www-data;
+worker_processes auto;
+pid /run/nginx.pid;
+error_log /var/log/nginx/error.log;
+include /etc/nginx/modules-enabled/*.conf;
 
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
+events {
+    worker_connections 768;
+    # multi_accept on;
+}
+
+http {
+
+    ##
+    # Basic Settings
+    ##
+    sendfile on;
+    tcp_nopush on;
+    types_hash_max_size 2048;
+    # server_tokens off;
+
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    ##
+    # SSL Settings
+    ##
+    ssl_protocols TLSv1 TLSv1.1 TLSv1.2 TLSv1.3; 
+    ssl_prefer_server_ciphers on;
+
+    ##
+    # Logging Settings
+    ##
+    access_log /var/log/nginx/access.log;
+
+    ##
+    # Gzip Settings
+    ##
+ 
+    # static file path
+    location /static/ {
+        root /var/www/html;
     }
+
+    ##
+    # Brotli Settings
+    ##
+    brotli on;
+    brotli_static on;
+    brotli_comp_level 6; # higher = better compression but slower
+    # Minimum response length to compress (in bytes)
+    brotli_min_length 20;  # Default: 20
+    
+    # Compression window size (10-24, larger = better compression)
+    brotli_window 512k;  # Default: 512k
+
+    # MIME types to compress
+    brotli_types 
+        text/plain
+        text/css
+        text/xml
+        text/javascript
+        application/javascript
+        application/x-javascript
+        application/json
+        application/xml
+        application/xml+rss
+        application/rss+xml
+        application/atom+xml
+        image/svg+xml
+        text/x-component
+        text/x-cross-domain-policy;
+    # Default: text/html (always compressed)
+
+    ##
+    # Upstream Backend
+    ##
+    upstream backend_pool {
+        server 127.0.0.1:8000 weight=5;
+        server 127.0.0.1:8001 weight=5;
+    }
+
+    ##
+    # Default Server Block (proxies to FastAPI)
+    ##
+    server {
+        listen 80 default_server;
+        server_name _;
+
+        location / {
+            proxy_pass http://backend_pool;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+	        proxy_set_header X-Forwarded-Proto $scheme;
+        }
+    }
+
+    ##
+    # Include additional configs
+    ##
+    include /etc/nginx/conf.d/*.conf;
+    include /etc/nginx/sites-enabled/*;
+
 }
